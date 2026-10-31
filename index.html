@@ -1,0 +1,688 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>BEAT</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: single-column phone app, practice-pad grey surfaces, cobalt "stick" accent, grade colors only for feedback */
+:root{
+  --bg:#F2F3F6; --surface:#FFFFFF; --surface-2:#E9EBF0; --ink:#151922; --muted:#666D7C; --line:#DADDE4;
+  --accent:#2C47D8; --accent-ink:#FFFFFF; --accent-soft:#E3E7FB;
+  --perfect:#159A55; --good:#6FA81E; --off:#D98A0B; --miss:#D2443A;
+  --display:"Black Han Sans","IBM Plex Sans KR",system-ui,sans-serif;
+  --body:"IBM Plex Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0E1015; --surface:#171A21; --surface-2:#22262F; --ink:#ECEEF3; --muted:#949AA8; --line:#2B303B;
+  --accent:#7088FF; --accent-ink:#0E1015; --accent-soft:#232B4D;
+  --perfect:#34C27A; --good:#9ACB45; --off:#F0A93A; --miss:#F06A5F; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1015; --surface:#171A21; --surface-2:#22262F; --ink:#ECEEF3; --muted:#949AA8; --line:#2B303B;
+  --accent:#7088FF; --accent-ink:#0E1015; --accent-soft:#232B4D;
+  --perfect:#34C27A; --good:#9ACB45; --off:#F0A93A; --miss:#F06A5F; color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  -webkit-tap-highlight-color:transparent}
+.app{max-width:460px;margin:0 auto;padding-block:14px 40px;display:flex;flex-direction:column;gap:18px}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:40px}
+.brand{font-family:var(--display);font-size:26px;letter-spacing:.04em}
+.iconbtn{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--surface);border:1px solid var(--line)}
+.iconbtn svg{width:20px;height:20px;stroke:var(--ink);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+h1{font-family:var(--display);font-weight:400;font-size:28px;line-height:1.2;margin:0;text-wrap:balance}
+h2{font-size:13px;font-weight:600;letter-spacing:.06em;color:var(--muted);margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:13px;font-weight:500}
+.chip.warn{border-color:var(--off);color:var(--off)}
+.chip b{font-family:var(--mono);font-weight:700}
+.unit{display:flex;flex-direction:column;gap:8px}
+.lessons{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.lrow{display:grid;grid-template-columns:36px 1fr auto;gap:12px;align-items:center;padding:14px 14px;text-align:left;width:100%;border-top:1px solid var(--line)}
+.lrow:first-child{border-top:0}
+.lrow:active{background:var(--surface-2)}
+.num{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--surface-2);font-family:var(--mono);font-weight:700;font-size:14px}
+.num.done{background:var(--accent);color:var(--accent-ink)}
+.lt{min-width:0}.lt b{display:block;font-weight:600}.lt span{color:var(--muted);font-size:13px}
+.lr{text-align:right;font-size:12px;color:var(--muted);font-family:var(--mono)}
+.stars{color:var(--accent);letter-spacing:2px;font-size:13px}
+.stars i{font-style:normal;color:var(--line)}
+/* lesson */
+.steps{display:flex;gap:6px}
+.steps span{flex:1;height:4px;border-radius:4px;background:var(--line)}
+.steps span.on{background:var(--accent)}
+.coach{display:flex;gap:10px;align-items:flex-start}
+.coach .av{flex:none;width:34px;height:34px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-family:var(--display);font-size:14px}
+.bubble{background:var(--surface);border:1px solid var(--line);border-radius:4px 16px 16px 16px;padding:10px 13px;font-size:15px}
+.stage{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:18px 12px 14px;display:flex;flex-direction:column;gap:12px;position:relative}
+.stagehead{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);padding-inline:4px}
+.stagehead b{font-family:var(--mono);color:var(--ink)}
+.bar{display:flex;gap:7px}
+.beat{flex:1;display:flex;gap:2px;min-width:0;padding-top:2px;border-top:2px solid var(--line)}
+.cell{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px}
+.acc{height:14px;font-family:var(--mono);font-weight:700;font-size:13px;line-height:14px;color:var(--ink)}
+.head{width:100%;max-width:32px;aspect-ratio:1;border-radius:50%;display:grid;place-items:center;font-family:var(--mono);font-weight:700;font-size:12px;border:1.5px solid var(--ink);background:var(--surface);transition:transform .08s,background .08s}
+.head.L{border-style:solid;background:var(--surface-2)}
+.head.A{background:var(--ink);color:var(--bg)}
+.rest{width:100%;max-width:32px;aspect-ratio:1;display:grid;place-items:center;color:var(--muted)}
+.rest::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--line)}
+.cnt{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.cell.now .head{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);transform:scale(1.12)}
+.cell.now .rest::after{background:var(--accent)}
+.cell.now .cnt{color:var(--accent);font-weight:700}
+.cell.g-perfect .head{background:var(--perfect);border-color:var(--perfect);color:#fff}
+.cell.g-good .head{background:var(--good);border-color:var(--good);color:#fff}
+.cell.g-early .head,.cell.g-late .head{background:var(--off);border-color:var(--off);color:#fff}
+.cell.g-miss .head{background:transparent;border:1.5px dashed var(--miss);color:var(--miss)}
+.cell.g-acc-x .acc{color:var(--miss)}
+.countdown{position:absolute;inset:0;display:grid;place-items:center;border-radius:20px;background:color-mix(in srgb,var(--surface) 82%,transparent);font-family:var(--display);font-size:96px;color:var(--accent);pointer-events:none}
+.bpm{display:flex;align-items:center;justify-content:center;gap:14px}
+.bpm button{width:40px;height:40px;border-radius:50%;background:var(--surface);border:1px solid var(--line);font-size:20px;font-weight:600}
+.bpm .v{font-family:var(--mono);font-weight:700;font-size:28px;min-width:64px;text-align:center}
+.bpm small{display:block;font-family:var(--body);font-size:11px;color:var(--muted);font-weight:500;margin-top:-4px}
+.pad{height:150px;border-radius:24px;background:var(--surface-2);border:2px solid var(--line);display:grid;place-items:center;color:var(--muted);font-weight:600;touch-action:manipulation;user-select:none;-webkit-user-select:none;transition:background .06s}
+.pad.hit{background:var(--accent-soft);border-color:var(--accent)}
+.micring{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:var(--surface);border:1px solid var(--line);font-size:14px}
+.dot{width:14px;height:14px;border-radius:50%;background:var(--line);flex:none;transition:background .05s,transform .05s}
+.dot.hit{background:var(--accent);transform:scale(1.5)}
+.meter{flex:1;height:8px;border-radius:8px;background:var(--surface-2);position:relative;overflow:hidden}
+.meter i{position:absolute;inset:0 auto 0 0;width:0;background:var(--accent);border-radius:8px}
+.meter u{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink)}
+.toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:14px;padding:4px 2px}
+.sw{width:46px;height:28px;border-radius:999px;background:var(--line);position:relative;flex:none}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--surface);transition:left .15s}
+.sw[aria-checked="true"]{background:var(--accent)}
+.sw[aria-checked="true"]::after{left:21px}
+.hint{font-size:12.5px;color:var(--muted)}
+.actions{display:flex;flex-direction:column;gap:10px}
+.btn{height:54px;border-radius:16px;font-weight:600;font-size:16px;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--surface);border:1px solid var(--line)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--muted);height:44px}
+.btn:disabled{opacity:.45}
+/* result */
+.score{display:flex;align-items:flex-end;gap:10px}
+.score .n{font-family:var(--display);font-size:84px;line-height:.9}
+.score .of{font-family:var(--mono);color:var(--muted);padding-bottom:8px}
+.score .word{margin-left:auto;text-align:right;font-weight:700;font-size:18px;padding-bottom:6px}
+.score .word small{display:block;font-weight:500;font-size:12px;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 8px;text-align:center}
+.stat b{display:block;font-family:var(--mono);font-size:20px;font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--muted)}
+.stat.p b{color:var(--perfect)}.stat.g b{color:var(--good)}.stat.o b{color:var(--off)}.stat.m b{color:var(--miss)}
+.metrics{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:var(--muted);padding-inline:4px}
+.metrics b{font-family:var(--mono);color:var(--ink);font-variant-numeric:tabular-nums}
+.chart{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:12px 8px 6px}
+.chart svg{width:100%;height:auto;display:block}
+.tips{display:flex;flex-direction:column;gap:8px;margin:0;padding:0;list-style:none}
+.tips li{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:11px 13px;font-size:14px;display:flex;gap:10px}
+.tips li::before{content:"";flex:none;width:6px;border-radius:6px;background:var(--tip,var(--accent))}
+/* settings */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:14px;background:var(--surface-2)}
+.seg button{height:42px;border-radius:11px;font-weight:600;font-size:14px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgb(0 0 0 / .12)}
+.latv{font-family:var(--mono);font-size:32px;font-weight:700}
+.latv small{font-size:14px;color:var(--muted);font-weight:500}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.row2 .btn{height:48px;font-size:14px}
+.status{font-size:13.5px;min-height:20px}
+.status.err{color:var(--miss)}.status.ok{color:var(--perfect)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));max-width:min(420px,calc(100% - 32px));background:var(--ink);color:var(--bg);padding:11px 16px;border-radius:14px;font-size:14px;z-index:20}
+/* bottom tab bar */
+.app.tabbed{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+body.tabbed .toast{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--surface);border-top:1px solid var(--line);
+  padding:8px max(16px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.tabbar .in{max-width:460px;margin:0 auto;display:grid;grid-template-columns:repeat(2,1fr)}
+.tab{display:flex;flex-direction:column;align-items:center;gap:4px;padding:2px 0;color:var(--muted);font-size:12.5px;font-weight:600}
+.tab .ico{width:64px;height:32px;border-radius:999px;display:grid;place-items:center;transition:background .15s}
+.tab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tab[aria-current="page"]{color:var(--accent)}
+.tab[aria-current="page"] .ico{background:var(--accent-soft)}
+.tab[aria-current="page"] svg .fill{fill:currentColor}
+/* home hero */
+.unithead{display:flex;flex-direction:column;gap:4px}
+.unithead small{font-size:13px;font-weight:600;color:var(--muted)}
+.uprog{height:6px;border-radius:6px;background:var(--surface-2);overflow:hidden}
+.uprog i{display:block;height:100%;background:var(--accent);border-radius:6px}
+.next{background:var(--accent);color:var(--accent-ink);border-radius:24px;padding:20px;display:flex;flex-direction:column;gap:14px}
+.next .lbl{font-size:12px;font-weight:600;letter-spacing:.06em;opacity:.8}
+.next .t{font-family:var(--display);font-size:30px;line-height:1.15}
+.next .s{font-size:14px;opacity:.85}
+.next .preview{display:flex;gap:6px;flex-wrap:wrap}
+.next .preview span{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-family:var(--mono);font-weight:700;font-size:12px;border:1.5px solid currentColor;opacity:.9}
+.next .preview span.A{background:var(--accent-ink);color:var(--accent);border-color:var(--accent-ink);opacity:1}
+.next .preview span.r{border-style:dashed;opacity:.4}
+.next .go{height:54px;border-radius:16px;background:var(--accent-ink);color:var(--accent);font-weight:700;font-size:16px}
+.linkbtn{color:var(--accent);font-weight:600;font-size:15px;padding:8px;align-self:center}
+/* course tab */
+.coursepill{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 14px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-weight:700;font-size:15px}
+.coursepill svg{width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.level{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:22px 8px 4px}
+.level h1{font-size:30px}
+.level p{margin:0;color:var(--muted);font-size:15px;max-width:320px}
+.level p b{color:var(--ink)}
+.lvbadge{min-width:48px;height:48px;padding:0 8px;border-radius:999px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:14px}
+.ccard{display:flex;flex-direction:column;gap:10px;text-align:left;width:100%;background:var(--surface);border:2px solid transparent;border-radius:24px;padding:18px 18px 16px;box-shadow:0 2px 8px rgb(0 0 0 / .06)}
+.ccard.sel{border-color:var(--accent)}
+.ccard:active{background:var(--surface-2)}
+.ch{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ct{display:inline-flex;align-items:center;gap:8px;font-size:19px;font-weight:700}
+.ct.full{color:var(--muted)}
+.ok{width:24px;height:24px;border-radius:50%;background:var(--perfect);color:#fff;display:grid;place-items:center;font-size:14px;font-weight:700}
+.lvchip{padding:4px 12px;border-radius:999px;background:var(--surface-2);font-size:13px;font-weight:600}
+.cd{font-size:15px;line-height:1.55}
+.cf{display:flex;align-items:center;justify-content:space-between}
+.pick{color:var(--accent);font-weight:700;font-size:16px}
+.cnum{font-family:var(--mono);font-size:12px;color:var(--muted)}
+/* reading lessons */
+.segs{flex:1;display:flex;gap:4px}
+.segs span{flex:1;height:4px;border-radius:4px;background:var(--line)}
+.segs span.on{background:var(--accent)}
+.pgn{font-family:var(--mono);font-size:12px;color:var(--muted);min-width:32px;text-align:right}
+.rpage{display:flex;flex-direction:column;gap:10px;min-height:calc(100dvh - 210px);cursor:pointer;user-select:none;-webkit-user-select:none}
+.rfig{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:14px;min-height:40px}
+.rfig:empty{display:none}
+.rfig .stage{border:0;padding:4px 0 0}
+.rk{font-size:13px;font-weight:600;color:var(--accent);margin-top:6px}
+.rpage h1{font-size:30px}
+.rpage p{margin:0;font-size:17px;line-height:1.7}
+.rhint{margin-top:auto;font-size:12.5px;color:var(--muted);text-align:center;padding-top:16px}
+.rnav{display:grid;grid-template-columns:1fr 2fr;gap:10px}
+.fig{width:100%;height:auto;display:block}
+.fig .kp rect,.fig .kp ellipse,.fig .kp circle{fill:var(--surface-2);stroke:var(--muted);stroke-width:1.5}
+.fig .kp .in{fill:none}
+.fig .kc ellipse{fill:var(--surface-2);stroke:var(--muted);stroke-width:1.5}
+.fig .kp.on rect,.fig .kp.on ellipse,.fig .kp.on circle:not(.in),.fig .kc.on ellipse{fill:var(--accent);stroke:var(--accent)}
+.fig .kp.on .in{stroke:var(--accent-ink);opacity:.5}
+.fig .ks line{stroke:var(--line);stroke-width:2}
+.fig .kl{font-size:12px;font-weight:600;fill:var(--ink);font-family:var(--body)}
+.fig .kl.acc{fill:var(--accent)}
+.fig .stk{fill:var(--surface-2);stroke:var(--ink);stroke-width:1.5}
+.fig .fp{fill:var(--accent);opacity:.85}
+.fig .dim{stroke:var(--accent);stroke-width:1.5}
+.fig .padl{stroke:var(--ink);stroke-width:3;stroke-linecap:round}
+.fig .sp path{stroke:var(--muted);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.fig .sp circle{fill:var(--muted)}
+.fig .sp.on path{stroke:var(--accent)}.fig .sp.on circle{fill:var(--accent)}
+.fig .body{fill:none;stroke:var(--ink);stroke-width:7;stroke-linecap:round;stroke-linejoin:round}
+.fig .kpf{fill:var(--surface-2);stroke:var(--muted);stroke-width:1.5}
+.fig .ln2{stroke:var(--muted);stroke-width:2}
+.fig .stkl{stroke:var(--accent);stroke-width:4;stroke-linecap:round}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="app" id="app"></div>
+<div id="tabs"></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(()=>{
+/* ---------- lessons ---------- */
+const UNITS=[
+ {id:'basics',name:'드럼 기초 상식',lv:0,title:'드럼 기초 상식',desc:'드럼 세트 이름, 앉는 자세, 스틱 쥐는 법: 치기 전에 알아두면 좋은 기본 상식을 카드로 배워보세요.',items:[
+  {id:'kit',kind:'read',title:'드럼 세트 이름',sub:'각 부분의 이름과 역할',pages:[
+   {fig:'kit:',t:'드럼 세트 한눈에 보기',b:'드럼 세트는 북(드럼)과 심벌로 이루어져 있어요. 오른손잡이 기준으로 의자에 앉았을 때 보이는 모습이에요. 하나씩 이름을 알아볼게요.'},
+   {fig:'kit:kick',t:'킥 드럼',b:'가장 큰 북이에요. 베이스 드럼이라고도 불러요. 오른발로 페달을 밟아서 치고, \'쿵\' 하는 낮은 소리로 리듬의 바닥을 받쳐줘요.'},
+   {fig:'kit:snare',t:'스네어 드럼',b:'다리 사이 앞에 놓인 북이에요. 아랫면에 붙은 철사 줄 때문에 \'착\' 하는 날카로운 소리가 나요. BEAT의 레슨은 대부분 스네어나 연습패드로 쳐요.'},
+   {fig:'kit:hihat',t:'하이햇',b:'심벌 두 장을 위아래로 마주 붙인 거예요. 왼발 페달로 열고 닫아요. 닫고 치면 \'칙\', 열고 치면 \'치이\' 소리가 나고, 박을 잘게 쪼개는 역할을 해요.'},
+   {fig:'kit:tom',t:'탐탐',b:'킥 드럼 위에 달린 작은 북들이에요. 리듬과 리듬 사이를 이어주는 짧은 구간(필인)에서 주로 쳐요. 크기가 작을수록 소리가 높아요.'},
+   {fig:'kit:floor',t:'플로어 탐',b:'다리를 바닥에 대고 서 있는 큰 탐이에요. 탐 중에서 가장 낮고 묵직한 소리가 나요.'},
+   {fig:'kit:crash',t:'크래시 심벌',b:'강조하고 싶을 때 \'촤악\' 하고 치는 심벌이에요. 곡이 시작할 때나 새로운 부분의 첫 박에 자주 써요.'},
+   {fig:'kit:ride',t:'라이드 심벌',b:'세트에서 가장 큰 심벌이에요. 하이햇 대신 \'띵 띵\' 하고 일정한 리듬을 이어갈 때 써요.'}]},
+  {id:'posture',kind:'read',title:'앉는 자세',sub:'의자 높이와 몸의 위치',pages:[
+   {fig:'posture',t:'의자 높이',b:'드럼 의자(스로운)에 앉았을 때 허벅지가 바닥과 거의 평행하거나, 무릎이 엉덩이보다 살짝 낮으면 좋아요. 너무 낮으면 페달을 밟기 힘들어요.'},
+   {fig:'posture',t:'스네어와의 거리',b:'스네어 가운데가 몸 정면에 오게 앉아요. 스틱을 내렸을 때 허벅지에 닿지 않을 만큼 떨어지고, 팔꿈치는 몸 옆에 편하게 내려오면 돼요.'},
+   {fig:'kit:kick',t:'발 위치',b:'오른발은 킥 페달, 왼발은 하이햇 페달 위에 올려요. 두 다리는 자연스럽게 벌리고, 무릎 각도는 90도보다 조금 넓게 두세요.'},
+   {fig:'posture',t:'상체와 어깨',b:'허리는 곧게 세우되 힘은 빼요. 어깨가 올라가면 금방 지쳐요. 팔을 어깨에서 툭 떨어뜨린 상태에서 시작하세요.'},
+   {fig:null,t:'연습패드로 할 때',b:'의자에 앉아 무릎 위나 스탠드에 패드를 올려요. 패드 높이는 배꼽보다 조금 아래가 좋아요. 휴대폰은 패드에서 30~50cm 떨어진 곳에 두세요.'}]},
+  {id:'grip',kind:'read',title:'스틱 쥐는 법',sub:'매치드 그립과 받침점',pages:[
+   {fig:'stick',t:'매치드 그립',b:'양손을 똑같은 모양으로 쥐는 방법이에요. 대부분 이 방법으로 시작하고, BEAT도 매치드 그립을 기준으로 해요.'},
+   {fig:'stick:f',t:'받침점 찾기',b:'스틱 끝(손잡이 쪽)에서 약 1/3 지점을 엄지 안쪽과 검지 첫째 마디 사이로 잡아요. 이곳이 시소의 중심처럼 스틱이 튕겨 오르는 축이 돼요.'},
+   {fig:'stick:f',t:'나머지 손가락',b:'중지, 약지, 새끼손가락은 스틱을 가볍게 감싸기만 해요. 꽉 쥐면 스틱이 튀어 오르지 않고, 손목과 팔이 금방 아파요.'},
+   {fig:null,t:'손등 방향',b:'손등이 거의 위를 보면 저먼 그립(힘이 잘 실림), 엄지가 위를 보면 프렌치 그립(손가락 컨트롤), 그 중간이 아메리칸 그립이에요. 처음엔 중간 각도로 시작하세요.'},
+   {fig:'stroke:full',t:'반동 이용하기',b:'패드를 치면 스틱이 위로 튀어 올라요. 이 반동을 막지 말고 따라 올라가게 두는 게 핵심이에요. 내려칠 때만 힘을 쓰고, 올라올 땐 스틱에 맡기세요.'}]},
+  {id:'strokes',kind:'read',title:'스트로크 4가지',sub:'높이로 세기를 조절하기',pages:[
+   {fig:'stroke:',t:'높이가 곧 세기',b:'스틱을 높이 들수록 큰 소리가 나요. 악센트(>) 레슨은 이 높이 차이로 세게 치는 음과 약하게 치는 음을 만들어요.'},
+   {fig:'stroke:full',t:'풀 스트로크',b:'높은 곳에서 시작해 치고, 다시 높은 곳으로 돌아와요. 큰 소리를 계속 이어갈 때 써요.'},
+   {fig:'stroke:down',t:'다운 스트로크',b:'높은 곳에서 치고 낮은 곳에서 멈춰요. 악센트 다음에 작은 음이 올 때 써요.'},
+   {fig:'stroke:tap',t:'탭 스트로크',b:'낮은 곳에서 시작해 치고, 낮은 곳으로 돌아와요. 작은 음을 칠 때 써요.'},
+   {fig:'stroke:up',t:'업 스트로크',b:'낮은 곳에서 치고 높은 곳으로 올라가요. 다음 음이 악센트일 때 미리 스틱을 들어 준비하는 동작이에요.'}]},
+  {id:'reading',kind:'read',title:'악보 기호 읽기',sub:'BEAT 화면의 기호와 박 세기',pages:[
+   {fig:null,t:'BPM',b:'1분에 몇 박을 치는지 나타내요. 60 BPM이면 1초에 한 박이에요. 숫자가 클수록 빨라요.'},
+   {fig:'note:quarter',t:'박과 마디',b:'BEAT의 레슨은 4/4박자예요. 한 마디에 4박이 있고, \'1 2 3 4\'로 세요. 위 그림은 한 박에 한 번씩 치는 4분음표예요.'},
+   {fig:'note:single16',t:'박 쪼개기',b:'8분음표는 \'1 & 2 &\', 16분음표는 \'1 e & a\', 셋잇단음표는 \'1 & a\'로 세요. 각 음 아래에 세는 법이 적혀 있어요.'},
+   {fig:'note:offbeat',t:'R, L과 쉼표',b:'R은 오른손, L은 왼손이에요. 동그라미 대신 작은 점이 있는 자리는 쉼표라서 치지 않고 박만 세요.'},
+   {fig:'note:accent8',t:'악센트',b:'위에 > 표시가 있고 검게 칠해진 음은 세게 쳐요. 나머지 음은 약하게 쳐야 악센트가 살아나요.'}]},
+ ]},
+ {id:'beat',name:'1단계 · 기본 박',lv:0,title:'기본 박',desc:'4분·8분음표와 엇박: 메트로놈에 맞춰 양손을 번갈아 치는 기본기를 익혀보세요.',items:[
+  {id:'quarter',title:'4분음표',sub:'한 박에 한 번, 양손 번갈아',bpm:70,spb:1,bar:'R L R L'},
+  {id:'eighth',title:'8분음표',sub:'한 박을 둘로 나누기',bpm:70,spb:2,bar:'R L R L R L R L'},
+  {id:'offbeat',title:'엇박 8분',sub:'박 사이의 &에만 치기',bpm:70,spb:2,bar:'. R . L . R . L'},
+  {id:'accent8',title:'악센트 8분',sub:'정박은 세게, &는 약하게',bpm:70,spb:2,bar:'^R L ^R L ^R L ^R L'},
+ ]},
+ {id:'rudiment',name:'2단계 · 루디먼트',lv:0,title:'루디먼트',desc:'싱글·더블 스트로크, 패러디들: 모든 드럼 연주의 바탕이 되는 손 패턴을 배워보세요.',items:[
+  {id:'single16',title:'싱글 스트로크',sub:'16분음표 RLRL',bpm:60,spb:4,bar:'R L R L R L R L R L R L R L R L'},
+  {id:'double16',title:'더블 스트로크',sub:'16분음표 RRLL',bpm:60,spb:4,bar:'R R L L R R L L R R L L R R L L'},
+  {id:'paradiddle',title:'싱글 패러디들',sub:'RLRR LRLL, 첫 음 악센트',bpm:60,spb:4,bar:'^R L R R ^L R L L ^R L R R ^L R L L'},
+  {id:'triplet',title:'셋잇단음표',sub:'한 박을 셋으로, 악센트 교대',bpm:60,spb:3,bar:'^R L R ^L R L ^R L R ^L R L'},
+  {id:'triple3',title:'트리플 스트로크',sub:'셋잇단 RRR LLL, 한 손으로 세 번',bpm:56,spb:3,bar:'^R R R ^L L L ^R R R ^L L L'},
+  {id:'dblparadiddle',title:'더블 패러디들',sub:'RLRLRR LRLRLL, 두 박마다 악센트',bpm:56,spb:3,bar:'^R L R L R R ^L R L R L L'},
+  {id:'paradiddlediddle',title:'패러디들-디들',sub:'RLRRLL, 손이 바뀌지 않아요',bpm:56,spb:3,bar:'^R L R R L L ^R L R R L L'},
+ ]},
+ {id:'accent',name:'3단계 · 악센트 컨트롤',lv:1,title:'악센트 컨트롤',desc:'e·a 악센트, 악센트 이동: 원하는 음만 세게 쳐서 리듬에 표정을 넣어보세요.',items:[
+  {id:'acc-e',title:'e 악센트',sub:'16분음표에서 두 번째 음만 세게',bpm:56,spb:4,bar:'R ^L R L R ^L R L R ^L R L R ^L R L'},
+  {id:'acc-a',title:'a 악센트',sub:'박 직전의 마지막 16분음을 세게',bpm:56,spb:4,bar:'R L R ^L R L R ^L R L R ^L R L R ^L'},
+  {id:'acc-move',title:'악센트 이동',sub:'1 → e → & → a로 한 칸씩 밀기',bpm:52,spb:4,bar:'^R L R L R ^L R L R L ^R L R L R ^L'},
+  {id:'acc-3over4',title:'3개 묶음 악센트',sub:'16분음표 위에 3개마다 악센트',bpm:52,spb:4,bar:'^R L R ^L R L ^R L R ^L R L ^R L R ^L'},
+ ]},
+ {id:'groove',name:'4단계 · 리듬 응용',lv:1,title:'리듬 응용',desc:'갤럽, 셔플, 3-3-2: 쉼표와 싱코페이션이 들어간 실전 리듬을 연습해보세요.',items:[
+  {id:'gallop',title:'갤럽',sub:'8분 + 16분 두 개 (따- 따다)',bpm:66,spb:4,bar:'^R . R L ^R . R L ^R . R L ^R . R L'},
+  {id:'revgallop',title:'리버스 갤럽',sub:'16분 두 개 + 8분 (따다 따-)',bpm:66,spb:4,bar:'^R L R . ^R L R . ^R L R . ^R L R .'},
+  {id:'three-rest',title:'셋 치고 쉬기',sub:'16분음표 세 개 + 쉼표',bpm:60,spb:4,bar:'R L R . L R L . R L R . L R L .'},
+  {id:'8to16',title:'8분 → 16분 전환',sub:'앞 두 박은 8분, 뒤 두 박은 16분',bpm:66,spb:4,bar:'^R . L . R . L . ^R L R L R L R L'},
+  {id:'shuffle',title:'셔플',sub:'셋잇단의 첫째·셋째 음만 (둥-따)',bpm:80,spb:3,bar:'^R . L ^R . L ^R . L ^R . L'},
+  {id:'tresillo',title:'3-3-2 리듬',sub:'8분음표를 3·3·2로 묶은 싱코페이션',bpm:80,spb:2,bar:'^R . . ^L . . ^R .'},
+ ]}];
+const LEVELS=[
+ {code:'Lv.1',name:'입문',desc:'스틱을 처음 잡고 박자를 세며 기본 손 패턴을 익혀요.'},
+ {code:'Lv.2',name:'초급',desc:'악센트와 리듬 변형으로 그루브의 기초를 다져요.'}];
+const LESSONS=UNITS.flatMap(u=>u.items);
+LESSONS.forEach(l=>{if(!l.bar)return;l.tokens=l.bar.split(' ').map(t=>t==='.'?null:{accent:t[0]==='^',hand:t.replace('^','')});l.hasAccent=l.tokens.some(t=>t&&t.accent);});
+const BARS=2;
+
+/* ---------- state ---------- */
+const store={get(){try{return JSON.parse(localStorage.getItem('beat-v1'))||{}}catch(e){return{}}},set(v){try{localStorage.setItem('beat-v1',JSON.stringify(v))}catch(e){}}};
+const saved=store.get();
+const S={view:'home',tab:'home',lesson:null,phase:'intro',listened:false,bpm:60,clickOn:false,result:null,
+  settings:Object.assign({mode:'mic',sens:5,lat:{mic:null,tap:null},theme:(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light'},saved.settings||{}),
+  progress:saved.progress||{},days:saved.days||[],course:saved.course??null,calStatus:'',calKind:''};
+const persist=()=>store.set({settings:S.settings,progress:S.progress,days:S.days,course:S.course});
+const DEF_LAT={mic:0.1,tap:0.03};
+const lat=()=>S.settings.lat[S.settings.mode]??DEF_LAT[S.settings.mode];
+const thr=()=>0.2*Math.pow(0.6,S.settings.sens-1);
+
+/* ---------- audio ---------- */
+let ctx=null,noiseBuf=null;const mic={ok:false,node:null,level:0};
+let collect=null;
+function ensureCtx(){
+  if(!ctx){ctx=new (window.AudioContext||window.webkitAudioContext)({latencyHint:'interactive'});
+    noiseBuf=ctx.createBuffer(1,ctx.sampleRate*0.3,ctx.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;}
+  if(ctx.state!=='running')ctx.resume();return ctx;}
+function drum(t,accent,out){
+  const g=ctx.createGain(),v=accent?0.9:0.38;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.16);
+  const n=ctx.createBufferSource();n.buffer=noiseBuf;const hp=ctx.createBiquadFilter();hp.type='highpass';hp.frequency.value=1200;
+  n.connect(hp).connect(g);n.start(t);n.stop(t+0.2);
+  const o=ctx.createOscillator(),og=ctx.createGain();o.type='triangle';o.frequency.setValueAtTime(220,t);o.frequency.exponentialRampToValueAtTime(140,t+0.08);
+  og.gain.setValueAtTime(v*0.8,t);og.gain.exponentialRampToValueAtTime(0.001,t+0.09);o.connect(og).connect(out);o.start(t);o.stop(t+0.1);
+  g.connect(out);}
+function click(t,strong,out,vol=0.5){
+  const o=ctx.createOscillator(),g=ctx.createGain();o.type='square';o.frequency.value=strong?1760:1175;
+  g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.035);o.connect(g).connect(out);o.start(t);o.stop(t+0.05);}
+const WORKLET=`class P extends AudioWorkletProcessor{constructor(){super();this.f=0;this.s=0;this.last=-1;this.thr=0.03;this.left=0;this.pk=0;this.t=0;this.lv=0;this.ln=0;
+const sr=sampleRate;this.aF=1-Math.exp(-1/(sr*0.001));this.rF=1-Math.exp(-1/(sr*0.012));this.aS=1-Math.exp(-1/(sr*0.12));
+this.port.onmessage=e=>{if(e.data.thr!=null)this.thr=e.data.thr}}
+process(inp){const c=inp[0]&&inp[0][0];if(!c)return true;const sr=sampleRate;
+for(let i=0;i<c.length;i++){const x=Math.abs(c[i]);this.f+=(x>this.f?this.aF:this.rF)*(x-this.f);this.s+=this.aS*(x-this.s);const t=currentTime+i/sr;
+if(this.left>0){if(x>this.pk)this.pk=x;if(--this.left===0)this.port.postMessage({type:'on',t:this.t,peak:this.pk})}
+else if(this.f>this.thr&&this.f>this.s*2.2&&t-this.last>0.06){this.last=t;this.t=t;this.pk=x;this.left=Math.round(sr*0.02)}
+if(x>this.lv)this.lv=x}
+this.ln+=c.length;if(this.ln>sr*0.04){this.port.postMessage({type:'lv',v:this.lv});this.lv=0;this.ln=0}return true}}
+registerProcessor('onset',P);`;
+async function initMic(){
+  if(mic.ok)return true;ensureCtx();
+  try{
+    if(!navigator.mediaDevices||!ctx.audioWorklet)throw new Error('unsupported');
+    const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+    const url=URL.createObjectURL(new Blob([WORKLET],{type:'application/javascript'}));
+    await ctx.audioWorklet.addModule(url);
+    const src=ctx.createMediaStreamSource(stream),node=new AudioWorkletNode(ctx,'onset'),z=ctx.createGain();z.gain.value=0;
+    src.connect(node).connect(z).connect(ctx.destination);
+    node.port.onmessage=e=>{const d=e.data;if(d.type==='lv')mic.level=d.v;else if(d.type==='on')onHit({t:d.t,peak:d.peak});};
+    mic.node=node;mic.ok=true;node.port.postMessage({thr:thr()});return true;
+  }catch(e){return false}}
+function onHit(h){if(collect)collect.push(h);flash();}
+function flash(){document.querySelectorAll('.pad,.dot').forEach(el=>{el.classList.add('hit');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('hit'),90)});}
+
+/* ---------- run a pattern ---------- */
+let run=null,raf=0;
+function schedule(lesson,bpm,{countIn,notes,clicks}){
+  ensureCtx();const beat=60/bpm,step=beat/lesson.spb,n=lesson.tokens.length,barDur=n*step;
+  const out=ctx.createGain();out.connect(ctx.destination);
+  const start=ctx.currentTime+0.2;const t0=countIn?start+4*beat:start;
+  if(countIn)for(let k=0;k<4;k++)click(start+k*beat,k===0,out);
+  const list=[];
+  for(let b=0;b<BARS;b++)lesson.tokens.forEach((tk,i)=>{if(!tk)return;const t=t0+(b*n+i)*step;list.push({t,bar:b,i,accent:tk.accent});if(notes)drum(t,tk.accent,out);});
+  if(clicks)for(let k=0;k<BARS*4;k++)click(t0+k*beat,k%4===0,out,0.35);
+  return {out,start,t0,end:t0+BARS*barDur,beat,step,n,notes:list};}
+function stopRun(){if(run){try{run.out.disconnect()}catch(e){}run=null}cancelAnimationFrame(raf);collect=null;releaseWake();}
+function loop(onEnd){
+  const r=run;if(!r)return;
+  const now=ctx.currentTime-(ctx.outputLatency||0);
+  const cd=document.getElementById('cd');
+  if(now<r.t0){if(cd){cd.hidden=r.t0===r.start;cd.textContent=Math.max(1,4-Math.floor((now-r.start)/r.beat));}}
+  else if(cd)cd.hidden=true;
+  const idx=now>=r.t0&&now<r.end?Math.floor((now-r.t0)/r.step):-1;
+  const local=idx>=0?idx%r.n:-1,bar=idx>=0?Math.floor(idx/r.n):0;
+  document.querySelectorAll('#live .cell').forEach((c,i)=>c.classList.toggle('now',i===local));
+  const bi=document.getElementById('barno');if(bi)bi.textContent=`${Math.min(bar+1,BARS)} / ${BARS}`;
+  if(ctx.currentTime>r.end+0.25){const c=collect;stopRun();onEnd(r,c);return;}
+  raf=requestAnimationFrame(()=>loop(onEnd));}
+let wake=null;async function holdWake(){try{wake=await navigator.wakeLock?.request('screen')}catch(e){}}
+function releaseWake(){try{wake&&wake.release()}catch(e){}wake=null}
+
+/* ---------- scoring ---------- */
+function evaluate(r,hitsRaw,lesson,mode){
+  const win=Math.min(0.18,r.step*0.5);
+  /* base latency: calibrated value, or default + the device's audio output delay (what you hear lags the schedule) */
+  const outLat=(ctx&&(ctx.outputLatency||ctx.baseLatency))||0;
+  const L0=S.settings.lat[mode]!=null?S.settings.lat[mode]:DEF_LAT[mode]+(mode==='tap'?outLat:0);
+  /* auto-align: find the constant shift (±350ms) that lines up the most hits, preferring the smallest shift */
+  const countAt=s=>{let c=0;r.notes.forEach(nt=>{if(hitsRaw.some(h=>Math.abs(h.t-L0-s-nt.t)<=win*0.6))c++;});return c;};
+  let shift=0,best=countAt(0);
+  for(let k=1;k<=70;k++)for(const s of [k*0.005,-k*0.005]){const c=countAt(s);if(c>best){best=c;shift=s;}}
+  if(best){const ds=[];r.notes.forEach(nt=>{let m=null;hitsRaw.forEach(h=>{const d=h.t-L0-shift-nt.t;if(Math.abs(d)<=win&&(m===null||Math.abs(d)<Math.abs(m)))m=d;});if(m!==null)ds.push(m);});
+    if(ds.length){ds.sort((a,b)=>a-b);shift+=ds[Math.floor(ds.length/2)];}}
+  const L=L0+shift;
+  const hits=hitsRaw.map(h=>({t:h.t-L,peak:h.peak,used:false})).filter(h=>h.t>r.t0-win&&h.t<r.end+win);
+  const pairs=[];r.notes.forEach((nt,ni)=>hits.forEach((h,hi)=>{const d=h.t-nt.t;if(Math.abs(d)<=win)pairs.push({ni,hi,d});}));
+  pairs.sort((a,b)=>Math.abs(a.d)-Math.abs(b.d));
+  const res=r.notes.map(nt=>({...nt,off:null,grade:'miss',peak:null}));
+  pairs.forEach(p=>{if(res[p.ni].off!==null||hits[p.hi].used)return;hits[p.hi].used=true;res[p.ni].off=p.d*1000;res[p.ni].peak=hits[p.hi].peak;});
+  res.forEach(x=>{if(x.off===null)return;const a=Math.abs(x.off);x.grade=a<=40?'perfect':a<=80?'good':x.off<0?'early':'late';});
+  const extras=hits.filter(h=>!h.used).length;
+  const pts={perfect:100,good:85,early:60,late:60,miss:0};
+  let score=res.reduce((s,x)=>s+pts[x.grade],0)/res.length-extras*2;
+  const matched=res.filter(x=>x.off!==null),offs=matched.map(x=>x.off);
+  const mean=offs.length?offs.reduce((a,b)=>a+b,0)/offs.length:0;
+  const sd=offs.length>1?Math.sqrt(offs.reduce((a,b)=>a+(b-mean)**2,0)/(offs.length-1)):0;
+  let acc=null;
+  if(lesson.hasAccent&&mode==='mic'){
+    const soft=matched.filter(x=>!x.accent).map(x=>x.peak).sort((a,b)=>a-b);
+    const med=soft.length?soft[Math.floor(soft.length/2)]:null;
+    const accN=res.filter(x=>x.accent);
+    if(med){let ok=0;accN.forEach(x=>{x.accOk=x.peak!=null&&x.peak>=med*1.15;if(x.accOk)ok++;});acc={ok,total:accN.length};score=score*0.85+15*(ok/accN.length);}
+  }
+  score=Math.max(0,Math.min(100,Math.round(score)));
+  const cnt=g=>res.filter(x=>x.grade===g).length;
+  return {score,res,extras,mean,sd,acc,counts:{perfect:cnt('perfect'),good:cnt('good'),off:cnt('early')+cnt('late'),miss:cnt('miss')},calibrated:S.settings.lat[mode]!=null,mode,shift};}
+function tips(R,lesson){
+  const t=[],m=Math.round(Math.abs(R.mean));
+  if(R.counts.miss>R.res.length*0.6){t.push(['소리가 거의 안 잡혔어요. 설정에서 감도를 올리거나 휴대폰을 패드 가까이 두세요.','var(--miss)']);return t;}
+  if(R.mean<-25)t.push([`전체적으로 ${m}ms 정도 서두르고 있어요. 클릭 소리를 끝까지 듣고 치는 느낌으로 가보세요.`,'var(--off)']);
+  else if(R.mean>25)t.push([`전체적으로 ${m}ms 정도 늦게 들어가요. 스틱을 미리 들어 올려 준비해 두세요.`,'var(--off)']);
+  if(R.sd>45)t.push([`음마다 타이밍 편차가 커요(±${Math.round(R.sd)}ms). BPM을 5 낮춰서 고르게 치는 데 집중해 보세요.`,'var(--off)']);
+  if(R.counts.miss)t.push([`${R.counts.miss}개를 놓쳤어요. ${lesson.id==='offbeat'?'엇박은 정박을 머릿속으로 세면서 &에서만 쳐야 해요.':'점선으로 표시된 음을 확인해 보세요.'}`,'var(--miss)']);
+  if(R.extras)t.push([`박자 밖에서 ${R.extras}번 소리가 잡혔어요. 주변 소음 때문이면 설정에서 감도를 낮춰 보세요.`,'var(--muted)']);
+  if(Math.abs(R.shift)>0.04)t.push([`기기 지연 때문에 전체가 ${Math.round(Math.abs(R.shift)*1000)}ms 밀려 있어서 자동으로 맞춰 채점했어요. 설정에서 지연 보정을 해두면 더 정확해요.`,'var(--muted)']);
+  if(R.acc&&R.acc.ok<R.acc.total)t.push([`악센트 ${R.acc.total}개 중 ${R.acc.ok}개가 살아 있어요. 악센트는 높이서, 나머지는 패드 가까이에서 치세요.`,'var(--off)']);
+  if(lesson.hasAccent&&R.mode==='tap')t.push(['화면 탭 모드에서는 세기(악센트)를 평가하지 않아요.','var(--muted)']);
+  if(!R.calibrated)t.push(['아직 지연 보정을 안 해서 전체가 조금 밀려 보일 수 있어요. 설정에서 한 번 보정해 두세요.','var(--muted)']);
+  if(R.score>=90)t.unshift(['아주 안정적이에요. BPM을 올려서 도전해 보세요.','var(--perfect)']);
+  if(!t.length)t.push(['좋아요. 한 번 더 쳐서 감을 굳혀 보세요.','var(--accent)']);
+  return t;}
+
+/* ---------- view helpers ---------- */
+const $app=document.getElementById('app'),$tabs=document.getElementById('tabs');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const IC={close:'<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>',back:'<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>',gear:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>'};
+function cntLabel(i,spb){const b=Math.floor(i/spb)+1,k=i%spb;if(!k)return b;return spb===2?'&':spb===3?['','&','a'][k]:['','e','&','a'][k];}
+function notation(lesson,{id='',bar=0,graded=null}={}){
+  const n=lesson.tokens.length,beats=[];
+  for(let b=0;b<4;b++){let cells='';for(let k=0;k<lesson.spb;k++){const i=b*lesson.spb+k,tk=lesson.tokens[i];let cls='cell';
+    if(graded&&tk){const r=graded.find(x=>x.bar===bar&&x.i===i);if(r){cls+=' g-'+r.grade;if(r.accent&&r.accOk===false)cls+=' g-acc-x';}}
+    cells+=`<div class="${cls}"><span class="acc">${tk&&tk.accent?'&gt;':''}</span>${tk?`<span class="head ${tk.hand}${tk.accent?' A':''}">${tk.hand}</span>`:'<span class="rest"></span>'}<span class="cnt">${cntLabel(i,lesson.spb)}</span></div>`;}
+    beats.push(`<div class="beat">${cells}</div>`);}
+  return `<div class="bar"${id?` id="${id}"`:''}>${beats.join('')}</div>`;}
+function starsFor(s){const n=s>=90?3:s>=75?2:s>=50?1:0;return '★'.repeat(n)+'<i>'+'★'.repeat(3-n)+'</i>';}
+function streak(){const set=new Set(S.days);let d=new Date(),n=0;const key=x=>x.toLocaleDateString('sv-SE');if(!set.has(key(d)))d.setDate(d.getDate()-1);while(set.has(key(d))){n++;d.setDate(d.getDate()-1);}return n;}
+
+const TAB_IC={
+  home:'<svg viewBox="0 0 24 24"><path class="fill" d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1z"/></svg>',
+  course:'<svg viewBox="0 0 24 24"><path class="fill" d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5z"/><path d="M5 19.5A1.5 1.5 0 0 0 6.5 21H19v-3"/></svg>'};
+function vTabbar(){
+  const t=(id,label)=>`<button class="tab" data-act="tab" data-t="${id}"${S.view===id?' aria-current="page"':''}><span class="ico">${TAB_IC[id]}</span>${label}</button>`;
+  return `<nav class="tabbar" aria-label="메인 메뉴"><div class="in">${t('home','홈')}${t('course','코스')}</div></nav>`;}
+function curCourse(){
+  const si=UNITS.findIndex(u=>u.id===S.course);if(si>=0)return si;
+  const i=UNITS.findIndex(u=>u.items.some(x=>!S.progress[x.id]));return i<0?0:i;}
+function nextLesson(){
+  const ui=curCourse(),u=UNITS[ui],l=u.items.find(x=>!S.progress[x.id])||u.items[0];return {l,ui,u};}
+function chipsRow(){
+  const st=streak(),mode=S.settings.mode;
+  return `<div class="chips"><span class="chip">연속 연습 <b>${st}</b>일</span><span class="chip">${mode==='mic'?'휴대폰 마이크':'화면 탭'}</span></div>`;}
+
+function vHome(){
+  const {l,ui,u}=nextLesson(),done=u.items.filter(x=>S.progress[x.id]).length,allDone=done===u.items.length,lv=LEVELS[u.lv];
+  const rd=l.kind==='read';
+  const prev=rd?'':l.tokens.slice(0,8).map(t=>t?`<span class="${t.accent?'A':''}">${t.hand}</span>`:'<span class="r"></span>').join('');
+  return `<div class="top"><button class="coursepill" data-act="tab" data-t="course">${esc(u.title)}<svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button><button class="iconbtn" data-act="settings" aria-label="설정">${IC.gear}</button></div>
+  ${chipsRow()}
+  <div class="unithead"><small>${lv.name} · ${done}/${u.items.length} 완료</small><h1>${esc(u.title)}</h1></div>
+  <div class="uprog"><i style="width:${done/u.items.length*100}%"></i></div>
+  <div class="next"><span class="lbl">${allDone?'다시 연습하기':S.progress[l.id]?'이어서':'다음 레슨'}</span>
+   <div><div class="t">${esc(l.title)}</div><div class="s">${esc(l.sub)} · ${rd?`카드 ${l.pages.length}장`:`${S.progress[l.id]?.bpm||l.bpm} BPM`}</div></div>
+   ${rd?'':`<div class="preview" aria-hidden="true">${prev}</div>`}
+   <button class="go" data-act="open" data-id="${l.id}">시작하기</button></div>
+  <section class="unit"><h2>이 코스의 레슨</h2><div class="lessons">${u.items.map((x,k)=>{const p=S.progress[x.id];
+    return `<button class="lrow" data-act="open" data-id="${x.id}"><span class="num${p?' done':''}">${k+1}</span><span class="lt"><b>${x.title}</b><span>${x.sub}</span></span>
+    <span class="lr">${x.kind==='read'?(p?'<span class="stars">읽음</span>':`카드 ${x.pages.length}장`):p?`<span class="stars">${starsFor(p.best)}</span><br>${p.best}점 · ${p.bpm}`:`${x.bpm} BPM`}</span></button>`}).join('')}</div></section>
+  <button class="linkbtn" data-act="tab" data-t="course">다른 코스 선택하기</button>`;}
+
+/* ---------- reading lessons ---------- */
+const KIT_LABEL={crash:['크래시',78,26],ride:['라이드',262,44],hihat:['하이햇',30,84],tom:['탐탐',160,66],snare:['스네어',89,176],kick:['킥',160,163],floor:['플로어 탐',256,198]};
+function figKit(hl){
+  const c=k=>`kp${k===hl?' on':''}`,cy=k=>`kc${k===hl?' on':''}`;
+  const drum=(k,x,y,w,h)=>`<g class="${c(k)}"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3"/><ellipse cx="${x+w/2}" cy="${y}" rx="${w/2}" ry="${Math.max(5,w*0.12)}"/></g>`;
+  let g=`<g class="ks"><line x1="78" y1="44" x2="78" y2="214"/><line x1="262" y1="62" x2="262" y2="214"/><line x1="30" y1="96" x2="30" y2="214"/><line x1="89" y1="150" x2="74" y2="214"/><line x1="89" y1="150" x2="104" y2="214"/><line x1="236" y1="180" x2="232" y2="214"/><line x1="276" y1="180" x2="280" y2="214"/><line x1="10" y1="214" x2="310" y2="214"/></g>`;
+  g+=`<g class="${cy('crash')}"><ellipse cx="78" cy="42" rx="40" ry="6"/></g><g class="${cy('ride')}"><ellipse cx="262" cy="60" rx="46" ry="7"/></g>`;
+  g+=`<g class="${c('kick')}"><circle cx="160" cy="160" r="52"/><circle cx="160" cy="160" r="40" class="in"/></g>`;
+  g+=drum('tom',112,86,40,28).replace(`class="${c('tom')}"`,`class="${c('tom')}"`)+drum('tom',168,86,40,28);
+  g+=drum('snare',58,130,62,20)+drum('floor',228,132,56,48);
+  g+=`<g class="${cy('hihat')}"><ellipse cx="30" cy="98" rx="27" ry="4"/><ellipse cx="30" cy="104" rx="27" ry="4"/></g>`;
+  if(!hl)g+=Object.values(KIT_LABEL).map(([t,x,y])=>`<text x="${x}" y="${y}" text-anchor="middle" class="kl">${t}</text>`).join('');
+  return `<svg viewBox="0 0 320 222" class="fig kit" role="img" aria-label="${hl?KIT_LABEL[hl][0]+' 위치':'드럼 세트 전체'}">${g}</svg>`;}
+function figStick(f){
+  let g=`<path d="M22 66 L292 60 Q304 62 292 70 L22 76 Q16 71 22 66Z" class="stk"/>`;
+  g+=`<text x="22" y="98" class="kl" text-anchor="start">손잡이 끝</text><text x="298" y="98" class="kl" text-anchor="end">팁 (치는 쪽)</text>`;
+  if(f)g+=`<line x1="22" y1="40" x2="112" y2="40" class="dim"/><line x1="22" y1="34" x2="22" y2="46" class="dim"/><line x1="112" y1="34" x2="112" y2="46" class="dim"/><text x="67" y="30" class="kl" text-anchor="middle">약 1/3</text><circle cx="112" cy="68" r="11" class="fp"/><text x="112" y="122" class="kl acc" text-anchor="middle">받침점 (엄지 + 검지)</text>`;
+  return `<svg viewBox="0 0 320 132" class="fig" role="img" aria-label="스틱과 받침점 위치">${g}</svg>`;}
+function figStroke(hl){
+  const T={full:['풀','H','H'],down:['다운','H','L'],tap:['탭','L','L'],up:['업','L','H']},Y={H:28,L:104},pad=132;
+  let g=`<line x1="10" y1="${pad}" x2="310" y2="${pad}" class="padl"/><text x="12" y="${Y.H+4}" class="kl" text-anchor="start">높게</text><text x="12" y="${Y.L+4}" class="kl" text-anchor="start">낮게</text>`;
+  Object.entries(T).forEach(([k,[n,a,b]],i)=>{const x=88+i*62,on=!hl||k===hl;
+    g+=`<g class="sp${k===hl?' on':''}" opacity="${on?1:.35}"><circle cx="${x-14}" cy="${Y[a]}" r="5"/><path d="M${x-14} ${Y[a]} L${x} ${pad-4} L${x+14} ${Y[b]}" fill="none"/><path d="M${x+14} ${Y[b]} l-7 3 M${x+14} ${Y[b]} l-1 8" fill="none"/><text x="${x}" y="${pad+20}" text-anchor="middle" class="kl">${n}</text></g>`;});
+  return `<svg viewBox="0 0 320 160" class="fig" role="img" aria-label="스트로크 높이 비교">${g}</svg>`;}
+function figPosture(){
+  const g=`<line x1="10" y1="200" x2="310" y2="200" class="padl"/>
+  <rect x="70" y="128" width="64" height="12" rx="6" class="kpf"/><line x1="102" y1="140" x2="102" y2="200" class="ln2"/><line x1="82" y1="200" x2="122" y2="200" class="ln2"/>
+  <circle cx="104" cy="44" r="15" class="kpf"/>
+  <path d="M104 60 L104 124 L172 126 L176 194 L198 196" class="body"/>
+  <path d="M104 74 L132 104 L178 98" class="body"/>
+  <line x1="178" y1="98" x2="230" y2="108" class="stkl"/>
+  <rect x="214" y="110" width="58" height="16" rx="3" class="kpf"/><ellipse cx="243" cy="110" rx="29" ry="5" class="kpf"/><line x1="243" y1="126" x2="243" y2="200" class="ln2"/>
+  <text x="166" y="156" class="kl acc" text-anchor="end">허벅지 수평 →</text>
+  <text x="104" y="22" class="kl" text-anchor="middle">허리는 곧게</text>`;
+  return `<svg viewBox="0 0 320 210" class="fig" role="img" aria-label="옆에서 본 앉는 자세">${g}</svg>`;}
+function figure(f){
+  if(!f)return '';const [k,v]=f.split(':');
+  if(k==='kit')return figKit(v||'');
+  if(k==='stick')return figStick(v==='f');
+  if(k==='stroke')return figStroke(v||'');
+  if(k==='posture')return figPosture();
+  if(k==='note'){const l=LESSONS.find(x=>x.id===v);return `<div class="stage">${notation(l)}</div>`;}
+  return '';}
+function vRead(){
+  const l=S.lesson,n=l.pages.length,i=S.page,pg=l.pages[i],last=i===n-1;
+  return `<div class="top"><button class="iconbtn" data-act="home" aria-label="닫기">${IC.close}</button>
+   <div class="segs">${l.pages.map((_,k)=>`<span class="${k<=i?'on':''}"></span>`).join('')}</div><span class="pgn">${i+1}/${n}</span></div>
+  <div class="rpage" data-act="flip">
+   <div class="rfig">${figure(pg.fig)}</div>
+   <span class="rk">${esc(l.title)}</span>
+   <h1>${esc(pg.t)}</h1>
+   <p>${esc(pg.b)}</p>
+   <span class="rhint">${i===0?'화면을 탭하면 다음 장으로 넘어가요 · 왼쪽을 탭하면 이전 장':''}</span>
+  </div>
+  <div class="actions">${last?`<button class="btn primary" data-act="readdone">다 읽었어요</button>`:`<div class="rnav"><button class="btn" data-act="flipto" data-d="-1"${i?'':' disabled'}>이전</button><button class="btn primary" data-act="flipto" data-d="1">다음</button></div>`}</div>`;}
+
+function vCourse(){
+  const cur=curCourse();
+  return `<div class="top"><span class="brand">코스</span><button class="iconbtn" data-act="settings" aria-label="설정">${IC.gear}</button></div>
+  ${LEVELS.map((lv,li)=>`<section class="level"><span class="lvbadge">${lv.code}</span><h1>${lv.name}</h1><p><b>${lv.code}:</b> ${lv.desc}</p></section>
+   ${UNITS.map((u,ui)=>u.lv!==li?'':(()=>{const done=u.items.filter(x=>S.progress[x.id]).length,full=done===u.items.length;
+    return `<button class="ccard${ui===cur?' sel':''}" data-act="pick" data-u="${ui}">
+     <span class="ch"><span class="ct${full?' full':''}">${esc(u.title)}${full?'<span class="ok" aria-label="완료">✓</span>':''}</span><span class="lvchip">${lv.code}</span></span>
+     <span class="cd">${esc(u.desc)}</span>
+     <span class="cf"><span class="pick">${ui===cur?'학습 중':'선택'}</span><span class="cnum">${done}/${u.items.length} 레슨</span></span></button>`})()).join('')}`).join('')}`;}
+
+function vLesson(){
+  const l=S.lesson,ph=S.phase,busy=ph==='listen'||ph==='play';
+  const stepOn=ph==='result'?3:(ph==='play'||S.listened)?2:1;
+  const coach={intro:'먼저 패턴을 들어보세요. R은 오른손, L은 왼손이에요.',listen:'잘 들어보세요. 굵은 음은 악센트예요.',
+    ready:`이제 따라 쳐보세요. 카운트 4번 뒤에 ${BARS}마디를 칩니다.`,play:S.settings.mode==='mic'?'패드를 쳐서 따라 해요!':'아래 패드를 박자에 맞춰 탭하세요!'}[ph==='intro'&&S.listened?'ready':ph];
+  return `<div class="top"><button class="iconbtn" data-act="home" aria-label="레슨 목록">${IC.back}</button>
+   <div class="steps" style="flex:1;max-width:200px"><span class="on"></span><span class="${stepOn>=2?'on':''}"></span><span class="${stepOn>=3?'on':''}"></span></div>
+   <button class="iconbtn" data-act="settings" aria-label="설정">${IC.gear}</button></div>
+  <h1>${l.title}</h1>
+  <div class="coach"><span class="av">B</span><div class="bubble">${coach}</div></div>
+  <div class="stage"><div class="stagehead"><span>마디 <b id="barno">1 / ${BARS}</b></span><span><b>${S.bpm}</b> BPM · 4/4</span></div>
+   ${notation(l,{id:'live'})}<div class="countdown" id="cd" hidden>4</div></div>
+  ${busy?'':`<div class="bpm"><button data-act="bpm" data-d="-5" aria-label="BPM 낮추기">−</button><div class="v">${S.bpm}<small>BPM</small></div><button data-act="bpm" data-d="5" aria-label="BPM 올리기">+</button></div>
+   <div class="toggle"><span>연주할 때 메트로놈 소리<br><span class="hint">${S.settings.mode==='mic'?'마이크 모드에선 이어폰을 꼈을 때만 켜세요':'켜두면 박자 잡기가 쉬워요'}</span></span><button class="sw" role="switch" aria-checked="${S.clickOn}" data-act="click" aria-label="메트로놈 소리"></button></div>`}
+  ${ph==='play'?(S.settings.mode==='mic'?`<div class="micring"><span class="dot"></span><span>듣고 있어요</span><div class="meter"><i id="lvl"></i></div></div>`:`<div class="pad" data-pad>여기를 탭</div>`):''}
+  <div class="actions">${busy?`<button class="btn" data-act="stop">멈춤</button>`:
+   S.listened?`<button class="btn primary" data-act="play">따라 치기</button><button class="btn" data-act="listen">다시 듣기</button>`:
+   `<button class="btn primary" data-act="listen">듣기</button><button class="btn ghost" data-act="play">바로 따라 치기</button>`}</div>`;}
+
+function vChart(R){
+  const W=340,H=150,pad=28,top=14,bot=H-22,mid=(top+bot)/2,sc=(bot-top)/2/100,n=R.res.length;
+  const x=i=>pad+(n===1?0:(W-pad-8)*(i/(n-1)));const y=o=>mid-Math.max(-100,Math.min(100,o))*sc;
+  const col={perfect:'var(--perfect)',good:'var(--good)',early:'var(--off)',late:'var(--off)'};
+  let g=`<rect x="${pad}" y="${y(40)}" width="${W-pad-8}" height="${y(-40)-y(40)}" fill="var(--perfect)" opacity=".1"/>`;
+  [100,50,0,-50,-100].forEach(v=>{g+=`<line x1="${pad}" x2="${W-8}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="${v?1:1.5}"/><text x="${pad-5}" y="${y(v)+3.5}" text-anchor="end" font-size="9" fill="var(--muted)" font-family="JetBrains Mono,monospace">${v>0?'+':''}${v}</text>`;});
+  const barN=R.res.filter(r=>r.bar===0).length;if(barN<n)g+=`<line x1="${(x(barN-1)+x(barN))/2}" x2="${(x(barN-1)+x(barN))/2}" y1="${top}" y2="${bot}" stroke="var(--line)" stroke-dasharray="3 3"/>`;
+  R.res.forEach((r,i)=>{if(r.off===null){const cx=x(i),cy=mid;g+=`<path d="M${cx-4} ${cy-4}L${cx+4} ${cy+4}M${cx+4} ${cy-4}L${cx-4} ${cy+4}" stroke="var(--miss)" stroke-width="2" fill="none"/>`;}
+    else g+=`<line x1="${x(i)}" x2="${x(i)}" y1="${mid}" y2="${y(r.off)}" stroke="${col[r.grade]}" stroke-width="2" opacity=".5"/><circle cx="${x(i)}" cy="${y(r.off)}" r="${n>20?3.5:4.5}" fill="${col[r.grade]}"/>`;});
+  g+=`<text x="${pad}" y="${H-6}" font-size="10" fill="var(--muted)" font-family="IBM Plex Sans KR,sans-serif">위쪽 = 늦게 침 · 아래쪽 = 빨리 침 (ms)</text>`;
+  return `<div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="음별 타이밍 편차 그래프">${g}</svg></div>`;}
+
+function vResult(){
+  const R=S.result,l=S.lesson;const word=R.score>=90?['완벽해요','박자가 아주 안정적이에요']:R.score>=75?['좋아요','조금만 다듬으면 돼요']:R.score>=50?['조금만 더','한 번 더 해볼까요']:['다시 해봐요','BPM을 낮춰보세요'];
+  const ms=v=>`${v>0?'+':''}${Math.round(v)}`;
+  return `<div class="top"><button class="iconbtn" data-act="home" aria-label="레슨 목록">${IC.back}</button>
+   <div class="steps" style="flex:1;max-width:200px"><span class="on"></span><span class="on"></span><span class="on"></span></div><span style="width:40px"></span></div>
+  <h2>${l.title} · ${S.bpm} BPM</h2>
+  <div class="score"><span class="n">${R.score}</span><span class="of">/100</span><span class="word">${word[0]}<small>${word[1]}</small></span></div>
+  <div class="stats"><div class="stat p"><b>${R.counts.perfect}</b><span>정확</span></div><div class="stat g"><b>${R.counts.good}</b><span>좋음</span></div>
+   <div class="stat o"><b>${R.counts.off}</b><span>빠름·늦음</span></div><div class="stat m"><b>${R.counts.miss}</b><span>놓침</span></div></div>
+  <div class="metrics"><span>평균 <b>${ms(R.mean)}ms</b></span><span>편차 <b>±${Math.round(R.sd)}ms</b></span>${R.acc?`<span>악센트 <b>${R.acc.ok}/${R.acc.total}</b></span>`:`<span>잡음 <b>${R.extras}</b></span>`}</div>
+  <div class="stage">${Array.from({length:BARS},(_,b)=>notation(l,{bar:b,graded:R.res})).join('')}</div>
+  ${vChart(R)}
+  <ul class="tips">${tips(R,l).map(([t,c])=>`<li style="--tip:${c}">${esc(t)}</li>`).join('')}</ul>
+  <div class="actions"><button class="btn primary" data-act="play">다시 하기</button>
+   ${R.score>=80&&S.bpm<160?`<button class="btn" data-act="harder">BPM ${S.bpm+5}로 도전</button>`:''}
+   ${R.score<50&&S.bpm>40?`<button class="btn" data-act="easier">BPM ${S.bpm-5}로 연습</button>`:''}
+   <button class="btn ghost" data-act="home">레슨 목록</button></div>`;}
+
+function vSettings(){
+  const m=S.settings.mode,L=S.settings.lat[m];
+  const th=S.settings.theme;
+  return `<div class="top"><button class="iconbtn" data-act="back" aria-label="뒤로">${IC.back}</button><span style="font-weight:600">설정</span><span style="width:40px"></span></div>
+  <div class="card"><h2>테마</h2><div class="seg"><button data-act="theme" data-v="light" aria-pressed="${th==='light'}">라이트</button><button data-act="theme" data-v="dark" aria-pressed="${th==='dark'}">다크</button></div></div>
+  <div class="card"><h2>입력 방식</h2><div class="seg"><button data-act="mode" data-m="mic" aria-pressed="${m==='mic'}">휴대폰 마이크</button><button data-act="mode" data-m="tap" aria-pressed="${m==='tap'}">화면 탭</button></div>
+   <span class="hint">${m==='mic'?'연습패드나 스네어를 치면 마이크로 타격을 감지해요. 휴대폰은 패드에서 30–50cm 떨어진 곳에 두세요.':'마이크 없이 화면을 손가락으로 탭해서 연습해요. 세기(악센트)는 평가하지 않아요.'}</span>${m==='tap'?`<div class="toggle"><span>탭할 때 드럼 소리<br><span class="hint">휴대폰에 따라 소리가 늦게 들릴 수 있어요. 헷갈리면 끄세요.</span></span><button class="sw" role="switch" aria-checked="${S.settings.tapSound!==false}" data-act="tapsnd" aria-label="탭 소리"></button></div>`:''}</div>
+  ${m==='mic'?`<div class="card"><h2>감도</h2>
+   ${mic.ok?`<div class="micring" style="padding:0;border:0"><span class="dot"></span><div class="meter"><i id="lvl"></i><u id="thrmark"></u></div></div>
+   <input type="range" id="sens" min="1" max="10" step="1" value="${S.settings.sens}" aria-label="감도">
+   <span class="hint">패드를 쳤을 때만 점이 켜지면 적당해요. 말소리에도 켜지면 감도를 낮추고, 약하게 칠 때 안 켜지면 올리세요.</span>`:
+   `<button class="btn" data-act="micon">마이크 켜기</button><span class="hint">브라우저가 마이크 권한을 물어보면 허용해 주세요.</span>`}</div>`:''}
+  <div class="card"><h2>지연 보정</h2>
+   <div class="latv">${L==null?'—':Math.round(L*1000)}<small> ms${L==null?' · 아직 보정 안 함':''}</small></div>
+   <span class="hint">${m==='mic'?'휴대폰마다 소리가 나가고 들어오는 데 걸리는 시간이 달라요. 이 값을 빼고 채점해요.':'화면 터치가 인식되기까지 걸리는 시간을 측정해요.'}</span>
+   ${m==='mic'?`<div class="row2"><button class="btn primary" data-act="cal" data-k="auto">자동 보정</button><button class="btn" data-act="cal" data-k="manual">직접 쳐서 보정</button></div>
+   <span class="hint">자동: 조용한 곳에서 이어폰을 빼고 스피커 음량을 높인 뒤 누르세요. 클릭 8번을 마이크로 다시 들어 측정해요.<br>직접: 이어폰을 끼고 클릭 10번에 맞춰 패드를 치세요.</span>`
+   :`<button class="btn primary" data-act="cal" data-k="manual">클릭에 맞춰 탭해서 보정</button>${S.calKind?'<div class="pad" data-pad>클릭에 맞춰 탭</div>':''}`}
+   <div class="status${/실패|못/.test(S.calStatus)?' err':/완료/.test(S.calStatus)?' ok':''}" id="calst">${esc(S.calStatus)}</div></div>`;}
+
+let prevView='home';
+function render(){
+  const tabbed=S.view==='home'||S.view==='course';
+  $app.innerHTML=S.view==='home'?vHome():S.view==='course'?vCourse():S.view==='settings'?vSettings():S.view==='read'?vRead():S.phase==='result'?vResult():vLesson();
+  $app.classList.toggle('tabbed',tabbed);document.body.classList.toggle('tabbed',tabbed);
+  $tabs.innerHTML=tabbed?vTabbar():'';
+  const sens=document.getElementById('sens');
+  if(sens)sens.oninput=e=>{S.settings.sens=+e.target.value;persist();mic.node&&mic.node.port.postMessage({thr:thr()});};
+  window.scrollTo(0,0);}
+/* meter loop */
+(function meter(){const i=document.getElementById('lvl');if(i){const db=v=>Math.max(0,Math.min(1,(20*Math.log10(Math.max(v,1e-5))+60)/60));i.style.width=(db(mic.level)*100)+'%';const t=document.getElementById('thrmark');if(t)t.style.left=(db(thr())*100)+'%';}requestAnimationFrame(meter);})();
+let toastT=0;function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,4200);}
+
+/* ---------- actions ---------- */
+function markDay(){const k=new Date().toLocaleDateString('sv-SE');if(!S.days.includes(k)){S.days.push(k);S.days=S.days.slice(-120);}}
+async function startPlay(){
+  ensureCtx();
+  if(S.settings.mode==='mic'&&!(await initMic())){S.settings.mode='tap';S.clickOn=true;persist();toast('마이크를 쓸 수 없어 화면 탭 모드로 바꿨어요. 휴대폰 브라우저에서 열면 마이크로 연습할 수 있어요.');}
+  S.phase='play';render();holdWake();
+  collect=[];run=schedule(S.lesson,S.bpm,{countIn:true,notes:false,clicks:S.clickOn});
+  loop((r,hits)=>{const R=evaluate(r,hits||[],S.lesson,S.settings.mode);S.result=R;
+    const p=S.progress[S.lesson.id];if(!p||R.score>p.best||(R.score===p.best&&S.bpm>p.bpm))S.progress[S.lesson.id]={best:R.score,bpm:S.bpm};
+    markDay();persist();S.phase='result';render();});}
+function startListen(){S.phase='listen';render();run=schedule(S.lesson,S.bpm,{countIn:false,notes:true,clicks:true});loop(()=>{S.listened=true;S.phase='intro';render();});}
+async function calibrate(kind){
+  ensureCtx();const m=S.settings.mode;
+  if(m==='mic'&&!(await initMic())){S.calStatus='마이크를 켜지 못했어요. 브라우저 권한을 확인해 주세요.';render();return;}
+  S.calKind=kind;S.calStatus=kind==='auto'?'측정 중… 휴대폰을 그대로 두세요':'클릭에 맞춰 치세요…';render();
+  const iv=kind==='auto'?0.5:0.6667,N=kind==='auto'?8:10,out=ctx.createGain();out.connect(ctx.destination);
+  const st=ctx.currentTime+0.4,cl=[];for(let k=0;k<N;k++){cl.push(st+k*iv);click(st+k*iv,k===0,out,kind==='auto'?1:0.6);}
+  collect=[];const endT=st+N*iv+0.5;
+  await new Promise(res=>{(function w(){if(ctx.currentTime>endT)res();else requestAnimationFrame(w)})()});
+  const hits=collect;collect=null;out.disconnect();const offs=[];
+  cl.forEach((c,k)=>{if(kind==='auto'){const h=hits.find(h=>h.t>=c&&h.t<=c+0.45);if(h)offs.push(h.t-c);}
+    else if(k>=2){let best=null;hits.forEach(h=>{const d=h.t-c;if(Math.abs(d)<=iv/2&&(best===null||Math.abs(d)<Math.abs(best)))best=d;});if(best!==null)offs.push(best);}});
+  S.calKind='';
+  if(offs.length<5){S.calStatus=kind==='auto'?'측정 실패: 클릭이 잘 안 들렸어요. 음량을 높이고 조용한 곳에서 다시 해보세요.':'측정 실패: 클릭에 맞춘 타격이 부족해요. 다시 해보세요.';}
+  else{offs.sort((a,b)=>a-b);const med=offs[Math.floor(offs.length/2)];S.settings.lat[m]=Math.max(0,Math.min(0.5,med));persist();S.calStatus=`보정 완료: ${Math.round(S.settings.lat[m]*1000)}ms (${offs.length}회 측정)`;}
+  render();}
+
+document.addEventListener('click',e=>{
+  const a=e.target.closest('[data-act]');if(!a)return;const act=a.dataset.act;
+  if(act==='open'&&LESSONS.find(l=>l.id===a.dataset.id).kind==='read'){S.lesson=LESSONS.find(l=>l.id===a.dataset.id);S.page=0;S.view='read';render();}
+  else if(act==='flip'){const r=a.getBoundingClientRect();flip(e.clientX-r.left<r.width*0.3?-1:1);}
+  else if(act==='flipto'){flip(+a.dataset.d);}
+  else if(act==='readdone'){S.progress[S.lesson.id]={read:true};markDay();persist();S.view=S.tab;render();}
+  else if(act==='open'){S.lesson=LESSONS.find(l=>l.id===a.dataset.id);S.bpm=S.progress[S.lesson.id]?.bpm||S.lesson.bpm;S.phase='intro';S.listened=false;S.clickOn=S.settings.mode==='tap';S.view='lesson';ensureCtx();render();}
+  else if(act==='home'){stopRun();S.view=S.tab;render();}
+  else if(act==='pick'){S.course=UNITS[+a.dataset.u].id;persist();S.tab='home';S.view='home';render();}
+  else if(act==='tab'){S.tab=a.dataset.t;S.view=S.tab;render();}
+  else if(act==='settings'){stopRun();if(S.view==='lesson'&&S.phase!=='result')S.phase='intro';prevView=S.view;S.view='settings';S.calStatus='';render();}
+  else if(act==='back'){S.view=prevView;render();}
+  else if(act==='listen'){stopRun();startListen();}
+  else if(act==='play'){stopRun();startPlay();}
+  else if(act==='stop'){stopRun();S.phase='intro';render();}
+  else if(act==='bpm'){S.bpm=Math.max(40,Math.min(160,S.bpm+ +a.dataset.d));render();}
+  else if(act==='harder'){S.bpm+=5;S.phase='intro';render();}
+  else if(act==='easier'){S.bpm-=5;S.phase='intro';render();}
+  else if(act==='click'){S.clickOn=!S.clickOn;render();}
+  else if(act==='tapsnd'){S.settings.tapSound=S.settings.tapSound===false;persist();render();}
+  else if(act==='theme'){S.settings.theme=a.dataset.v;persist();applyTheme();render();}
+  else if(act==='mode'){S.settings.mode=a.dataset.m;S.calStatus='';persist();render();}
+  else if(act==='micon'){initMic().then(ok=>{if(!ok)S.calStatus='마이크를 켜지 못했어요. 이 화면에서는 마이크가 막혀 있을 수 있어요.';render();});}
+  else if(act==='cal'){calibrate(a.dataset.k);}
+});
+document.addEventListener('pointerdown',e=>{
+  if(!e.target.closest('[data-pad]')||!ctx)return;e.preventDefault();
+  tapSound();onHit({t:ctx.currentTime-Math.max(0,(performance.now()-e.timeStamp)/1000),peak:null});});
+function tapSound(){if(S.settings.tapSound===false)return;try{ensureCtx();drum(ctx.currentTime,false,ctx.destination);}catch(e){}}
+function flip(d){const n=S.lesson.pages.length,i=Math.max(0,Math.min(n-1,S.page+d));if(i!==S.page){S.page=i;render();}}
+document.addEventListener('keydown',e=>{if(S.view==='read'&&(e.key==='ArrowRight'||e.key==='ArrowLeft')){flip(e.key==='ArrowRight'?1:-1);return;}if(e.code==='Space'&&document.querySelector('[data-pad]')&&ctx){e.preventDefault();tapSound();onHit({t:ctx.currentTime,peak:null});}});
+function applyTheme(){document.documentElement.dataset.theme=S.settings.theme;}
+applyTheme();
+render();
+})();
+</script>
+
+</body></html>
