@@ -3,7 +3,7 @@ import { Fragment } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { H1, page, T, TopBar } from '@/components/ui';
+import { H1, IconButton, page, T, TopBar } from '@/components/ui';
 import { F, useBeat } from '@/constants/beat-theme';
 import { BottomTabInset } from '@/constants/theme';
 import { LEVELS, UNITS } from '@/lib/lessons';
@@ -19,6 +19,7 @@ export default function CourseScreen() {
       <ScrollView contentContainerStyle={[page.wrap, { paddingBottom: BottomTabInset + 24 }]}>
         <TopBar>
           <T style={{ fontFamily: F.display, fontSize: 26, letterSpacing: 1 }}>코스</T>
+          <IconButton label="설정" icon="gear" onPress={() => router.push('/settings')} />
         </TopBar>
         {LEVELS.map((lv, li) => (
           <Fragment key={lv.code}>

@@ -1,7 +1,7 @@
 /**
  * 연주 레슨 (프로토타입 vLesson + startListen/startPlay).
  * 소리는 패턴 전체를 WAV 하나로 렌더링해서 재생하고, 재생 위치(currentTime)를 기준 시계로 쓴다.
- * 지금은 화면 탭 모드. 마이크 모드는 오디오 엔진 단계에서 추가.
+ * 마이크 모드: 마이크 스트림의 샘플 시계를 performance.now()를 거쳐 재생 시계로 바꿔 채점한다.
  */
 import { AudioPlayer, createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
@@ -10,38 +10,42 @@ import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { MicMeter } from '@/components/mic-meter';
 import { Notation } from '@/components/notation';
 import { ResultView } from '@/components/result-view';
 import { Button, H1, IconButton, page, Switch, T, TopBar } from '@/components/ui';
 import { F, useBeat } from '@/constants/beat-theme';
 import { BARS, PlayLesson } from '@/lib/lessons';
+import { Earned } from '@/lib/league';
 import { DEFAULT_LATENCY, evaluate, Hit, Result } from '@/lib/scoring';
-import { useStore } from '@/lib/store';
+import { useMic } from '@/lib/mic';
+import { InputMode, useStore } from '@/lib/store';
 import { Rendered, renderPattern, tapSoundUri } from '@/lib/synth';
 
 type Phase = 'intro' | 'listen' | 'play' | 'result';
-const MODE = 'tap' as const;
-
-let audioModeSet = false;
-async function ensureAudioMode() {
-  if (audioModeSet) return;
-  audioModeSet = true;
-  try { await setAudioModeAsync({ playsInSilentMode: true }); } catch {}
+async function ensureAudioMode(mode: InputMode) {
+  try { await setAudioModeAsync({ playsInSilentMode: true, allowsRecording: mode === 'mic', shouldRouteThroughEarpiece: false }); } catch {}
 }
 
 const median = (a: number[]) => { const b = [...a].sort((x, y) => x - y); return b[Math.floor(b.length / 2)]; };
 
 export function PlayScreen({ lesson: l }: { lesson: PlayLesson }) {
   const c = useBeat();
-  const { progress, saveScore } = useStore();
+  const { progress, saveScore, settings, setSettings } = useStore();
+  const mode = settings.mode;
+  const mic = useMic();
+  const micRef = useRef(mic);
+  micRef.current = mic;
   const [bpm, setBpm] = useState(progress[l.id]?.bpm ?? l.bpm);
-  const [clickOn, setClickOn] = useState(true); // 탭 모드는 기본으로 켬 (프로토타입과 같음)
+  // 탭 모드는 기본으로 켬, 마이크 모드는 끔 (스피커 소리가 마이크에 잡히므로. 프로토타입과 같음)
+  const [clickOn, setClickOn] = useState(mode === 'tap');
   const [phase, setPhase] = useState<Phase>('intro');
   const [listened, setListened] = useState(false);
   const [now, setNow] = useState(-1);
   const [barNo, setBarNo] = useState(1);
   const [count, setCount] = useState<number | null>(null);
   const [result, setResult] = useState<Result | null>(null);
+  const [earned, setEarned] = useState<Earned | null>(null);
   const [padHit, setPadHit] = useState(false);
   const [err, setErr] = useState('');
 
@@ -49,6 +53,9 @@ export function PlayScreen({ lesson: l }: { lesson: PlayLesson }) {
   const tapPlayer = useRef<AudioPlayer | null>(null);
   const run = useRef<Rendered | null>(null);
   const hits = useRef<Hit[] | null>(null);
+  /** 마이크 타격: 스트림 시간 그대로 모았다가 끝날 때 변환 */
+  const micHits = useRef<Hit[] | null>(null);
+  const micUnsub = useRef<(() => void) | null>(null);
   const offs = useRef<number[]>([]); // currentTime - performance.now() 표본
   const raf = useRef(0);
   const flashT = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -56,20 +63,23 @@ export function PlayScreen({ lesson: l }: { lesson: PlayLesson }) {
   const stopRun = () => {
     cancelAnimationFrame(raf.current);
     if (player.current) { try { player.current.pause(); player.current.remove(); } catch {} player.current = null; }
-    run.current = null; hits.current = null;
+    run.current = null; hits.current = null; micHits.current = null;
+    if (micUnsub.current) { micUnsub.current(); micUnsub.current = null; }
     setNow(-1); setCount(null);
     deactivateKeepAwake('beat');
   };
   useEffect(() => () => {
     stopRun();
+    micRef.current.stop();
     if (tapPlayer.current) { try { tapPlayer.current.remove(); } catch {} tapPlayer.current = null; }
   }, []);
 
   /** 패턴 파일을 만들어 재생하고, 끝나면 onEnd */
-  const start = async (opt: { countIn: boolean; notes: boolean; clicks: boolean }, onEnd: (r: Rendered, h: Hit[] | null) => void) => {
+  const start = async (opt: { countIn: boolean; notes: boolean; clicks: boolean }, onEnd: (r: Rendered, h: Hit[] | null) => void,
+    useMicNow = false) => {
     stopRun();
     setErr('');
-    await ensureAudioMode();
+    await ensureAudioMode(useMicNow ? 'mic' : 'tap');
     let r: Rendered;
     try { r = renderPattern(l, bpm, opt); } catch (e) { setErr('소리를 만들지 못했어요. 다시 시도해 주세요.'); return false; }
     const p = createAudioPlayer({ uri: r.uri }, { updateInterval: 50 });
@@ -86,7 +96,10 @@ export function PlayScreen({ lesson: l }: { lesson: PlayLesson }) {
       setNow(idx >= 0 ? idx % r.n : -1);
       setBarNo(idx >= 0 ? Math.min(Math.floor(idx / r.n) + 1, BARS) : 1);
       if (ct > r.end + 0.25 || (!p.playing && ct > r.end)) {
-        const h = hits.current;
+        const off = offs.current.length ? median(offs.current) : 0;
+        const h = micHits.current
+          ? micHits.current.map(x => ({ t: micRef.current.toPerf(x.t) + off, peak: x.peak }))
+          : hits.current;
         stopRun();
         onEnd(r, h);
         return;
@@ -104,14 +117,23 @@ export function PlayScreen({ lesson: l }: { lesson: PlayLesson }) {
   };
 
   const play = async () => {
+    let m = mode;
     setPhase('play'); setResult(null);
-    const ok = await start({ countIn: true, notes: false, clicks: clickOn }, (r, h) => {
-      const R = evaluate(r, h ?? [], l, MODE, DEFAULT_LATENCY[MODE], false);
-      saveScore(l.id, R.score, bpm);
+    if (m === 'mic' && !(await mic.start())) {
+      m = 'tap';
+      setSettings({ mode: 'tap' }); setClickOn(true);
+      setErr('마이크를 쓸 수 없어 화면 탭 모드로 바꿨어요. 앱 권한에서 마이크를 허용하면 마이크로 연습할 수 있어요.');
+    }
+    const ok = await start({ countIn: true, notes: false, clicks: m === 'tap' ? true : clickOn }, (r, h) => {
+      const R = evaluate(r, h ?? [], l, m, DEFAULT_LATENCY[m], false);
+      setEarned(saveScore(l, R.score, bpm));
       setResult(R); setPhase('result');
-    });
-    if (ok) hits.current = [];
-    else setPhase('intro');
+    }, m === 'mic');
+    if (!ok) { setPhase('intro'); return; }
+    if (m === 'mic') {
+      micHits.current = [];
+      micUnsub.current = mic.onHit(o => { micHits.current?.push({ t: o.t, peak: o.peak }); });
+    } else hits.current = [];
   };
 
   const stop = () => { stopRun(); setPhase('intro'); };
@@ -137,7 +159,7 @@ export function PlayScreen({ lesson: l }: { lesson: PlayLesson }) {
     intro: '먼저 패턴을 들어보세요. R은 오른손, L은 왼손이에요.',
     listen: '잘 들어보세요. 굵은 음은 악센트예요.',
     ready: `이제 따라 쳐보세요. 카운트 4번 뒤에 ${BARS}마디를 칩니다.`,
-    play: '아래 패드를 박자에 맞춰 탭하세요!',
+    play: mode === 'mic' ? '패드를 쳐서 따라 해요!' : '아래 패드를 박자에 맞춰 탭하세요!',
   };
 
   const steps = (
@@ -156,7 +178,7 @@ export function PlayScreen({ lesson: l }: { lesson: PlayLesson }) {
               {steps}
               <View style={{ width: 40 }} />
             </TopBar>
-            <ResultView R={result} lesson={l} bpm={bpm} onHome={goHome}
+            <ResultView R={result} lesson={l} bpm={bpm} earned={earned} onHome={goHome}
               onRetry={play} onBpm={d => { setBpm(b => b + d); setPhase('intro'); }} />
           </>
         ) : (
@@ -164,7 +186,7 @@ export function PlayScreen({ lesson: l }: { lesson: PlayLesson }) {
             <TopBar>
               <IconButton label="레슨 목록" icon="back" onPress={goHome} />
               {steps}
-              <IconButton label="설정" icon="gear" onPress={() => setErr('설정 화면은 오디오 엔진 단계에서 만들어요.')} />
+              <IconButton label="설정" icon="gear" onPress={() => { stopRun(); setPhase('intro'); router.push('/settings'); }} />
             </TopBar>
 
             <H1>{l.title}</H1>
@@ -205,13 +227,18 @@ export function PlayScreen({ lesson: l }: { lesson: PlayLesson }) {
               <View style={s.toggle}>
                 <View style={{ flex: 1 }}>
                   <T style={{ fontSize: 14 }}>연주할 때 메트로놈 소리</T>
-                  <T style={{ fontSize: 12.5, color: c.muted }}>켜두면 박자 잡기가 쉬워요</T>
+                  <T style={{ fontSize: 12.5, color: c.muted }}>{mode === 'mic' ? '마이크 모드에선 이어폰을 꼈을 때만 켜세요' : '켜두면 박자 잡기가 쉬워요'}</T>
                 </View>
                 <Switch on={clickOn} onChange={setClickOn} label="메트로놈 소리" />
               </View>
             </>}
 
-            {phase === 'play' && (
+            {phase === 'play' && mode === 'mic' && (
+              <View style={[s.micring, { backgroundColor: c.surface, borderColor: c.line }]}>
+                <MicMeter label="듣고 있어요" />
+              </View>
+            )}
+            {phase === 'play' && mode === 'tap' && (
               <Pressable onPressIn={onPad} style={[s.pad, padHit
                 ? { backgroundColor: c.accentSoft, borderColor: c.accent }
                 : { backgroundColor: c.surface2, borderColor: c.line }]}>
@@ -256,6 +283,7 @@ const s = {
     bpm: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 14 },
     round: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
     toggle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingVertical: 4, paddingHorizontal: 2 },
+    micring: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 14, borderRadius: 16, borderWidth: 1 },
     pad: { height: 150, borderRadius: 24, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
     toast: { position: 'absolute', left: 16, right: 16, bottom: 28, borderRadius: 14, paddingVertical: 11, paddingHorizontal: 16 },
   }),

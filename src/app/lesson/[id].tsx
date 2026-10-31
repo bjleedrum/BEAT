@@ -74,7 +74,7 @@ function ReadScreen({ lesson: l }: { lesson: ReadLesson }) {
       </Pressable>
 
       {last
-        ? <Button kind="primary" title="다 읽었어요" onPress={() => { markRead(l.id); router.back(); }} />
+        ? <Button kind="primary" title="다 읽었어요" onPress={() => { markRead(l); router.back(); }} />
         : <View style={{ flexDirection: 'row', gap: 10 }}>
             <Button title="이전" onPress={() => flip(-1)} disabled={i === 0} style={{ flex: 1 }} />
             <Button kind="primary" title="다음" onPress={() => flip(1)} style={{ flex: 2 }} />
@@ -102,7 +102,7 @@ function VideoScreen({ lesson: l }: { lesson: VideoLesson }) {
         <VideoView player={player} nativeControls contentFit="contain" style={{ height: vh, aspectRatio: 9 / 16, maxWidth: '100%' }} />
       </View>
       <T style={{ fontSize: 16, lineHeight: 26 }}>{l.desc}</T>
-      <Button kind="primary" title="다 봤어요" onPress={() => { markRead(l.id); router.back(); }} />
+      <Button kind="primary" title="다 봤어요" onPress={() => { markRead(l); router.back(); }} />
     </Screen>
   );
 }

@@ -5,6 +5,7 @@ import Svg, { Circle, G, Line, Path, Rect, Text as SvgText } from 'react-native-
 import { Notation } from '@/components/notation';
 import { Button, H2, T } from '@/components/ui';
 import { BeatPalette, F, useBeat } from '@/constants/beat-theme';
+import { Earned } from '@/lib/league';
 import { BARS, PlayLesson } from '@/lib/lessons';
 import { Result, Tip, tips } from '@/lib/scoring';
 
@@ -40,8 +41,8 @@ function Chart({ R, c }: { R: Result; c: BeatPalette }) {
 const TIP_COLOR = (c: BeatPalette, t: Tip['tone']) =>
   t === 'perfect' ? c.perfect : t === 'off' ? c.off : t === 'miss' ? c.miss : t === 'muted' ? c.muted : c.accent;
 
-export function ResultView({ R, lesson: l, bpm, onRetry, onBpm, onHome }:
-  { R: Result; lesson: PlayLesson; bpm: number; onRetry: () => void; onBpm: (d: number) => void; onHome: () => void }) {
+export function ResultView({ R, lesson: l, bpm, earned, onRetry, onBpm, onHome }:
+  { R: Result; lesson: PlayLesson; bpm: number; earned?: Earned | null; onRetry: () => void; onBpm: (d: number) => void; onHome: () => void }) {
   const c = useBeat();
   const word = R.score >= 90 ? ['완벽해요', '박자가 아주 안정적이에요'] : R.score >= 75 ? ['좋아요', '조금만 다듬으면 돼요']
     : R.score >= 50 ? ['조금만 더', '한 번 더 해볼까요'] : ['다시 해봐요', 'BPM을 낮춰보세요'];
@@ -65,6 +66,14 @@ export function ResultView({ R, lesson: l, bpm, onRetry, onBpm, onHome }:
           <T style={{ fontSize: 12, color: c.muted, fontFamily: F.medium }}>{word[1]}</T>
         </View>
       </View>
+      {!!earned?.total && (
+        <View style={[s.earn, { backgroundColor: c.accentSoft }]}>
+          <T style={{ fontFamily: F.display, fontSize: 22, color: c.accent }}>+{earned.total} 포인트</T>
+          <T style={{ flex: 1, textAlign: 'right', fontSize: 12.5, color: c.accent }}>
+            {earned.parts.map(p => `${p.label} ${p.pts}`).join(' · ')}
+          </T>
+        </View>
+      )}
       <View style={s.stats}>
         {stat(R.counts.perfect, '정확', c.perfect)}{stat(R.counts.good, '좋음', c.good)}
         {stat(R.counts.off, '빠름·늦음', c.off)}{stat(R.counts.miss, '놓침', c.miss)}
@@ -98,6 +107,7 @@ export function ResultView({ R, lesson: l, bpm, onRetry, onBpm, onHome }:
 const s = StyleSheet.create({
   score: { flexDirection: 'row', alignItems: 'flex-end', gap: 10 },
   stats: { flexDirection: 'row', gap: 8 },
+  earn: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 14, paddingVertical: 10, paddingHorizontal: 14 },
   stat: { flex: 1, borderWidth: 1, borderRadius: 14, paddingVertical: 10, paddingHorizontal: 4, alignItems: 'center' },
   metrics: { flexDirection: 'row', justifyContent: 'space-between', gap: 10, paddingHorizontal: 4 },
   stage: { borderWidth: 1, borderRadius: 20, paddingTop: 18, paddingHorizontal: 12, paddingBottom: 14, gap: 12 },

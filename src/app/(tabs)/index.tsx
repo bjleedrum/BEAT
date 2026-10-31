@@ -3,16 +3,17 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icons';
-import { H1, H2, LessonRow, page, T, TopBar } from '@/components/ui';
+import { TierBadge } from '@/components/tier-badge';
+import { H1, H2, IconButton, LessonRow, page, T, TopBar } from '@/components/ui';
 import { F, useBeat } from '@/constants/beat-theme';
 import { BottomTabInset } from '@/constants/theme';
 import { LEVELS, UNITS } from '@/lib/lessons';
 import { openLesson } from '@/lib/nav';
-import { nextLesson, streak, useStore } from '@/lib/store';
+import { nextLesson, streak, useStore, weekPoints } from '@/lib/store';
 
 export default function HomeScreen() {
   const c = useBeat();
-  const { progress, course, days } = useStore();
+  const { progress, course, days, settings, profile, points } = useStore();
   const { lesson: l, unitIndex } = nextLesson(course, progress);
   const u = UNITS[unitIndex], lv = LEVELS[u.lv];
   const done = u.items.filter(x => progress[x.id]).length, allDone = done === u.items.length;
@@ -26,14 +27,19 @@ export default function HomeScreen() {
             <T style={{ fontFamily: F.bold }}>{u.title}</T>
             <Icon name="chev" size={16} color={c.muted} />
           </Pressable>
+          <IconButton label="설정" icon="gear" onPress={() => router.push('/settings')} />
         </TopBar>
 
         <View style={s.chips}>
+          <Pressable onPress={() => router.navigate('/league')} style={[s.chip, s.tierChip, { backgroundColor: c.surface, borderColor: c.line }]}>
+            <TierBadge tier={profile.tier} size={18} />
+            <T style={{ fontSize: 13, fontFamily: F.medium }}>이번 주 <T style={{ fontFamily: F.monoBold, fontSize: 13 }}>{weekPoints(points)}</T> P</T>
+          </Pressable>
           <View style={[s.chip, { backgroundColor: c.surface, borderColor: c.line }]}>
             <T style={{ fontSize: 13, fontFamily: F.medium }}>연속 연습 <T style={{ fontFamily: F.monoBold, fontSize: 13 }}>{streak(days)}</T>일</T>
           </View>
           <View style={[s.chip, { backgroundColor: c.surface, borderColor: c.line }]}>
-            <T style={{ fontSize: 13, fontFamily: F.medium }}>휴대폰 마이크</T>
+            <T style={{ fontSize: 13, fontFamily: F.medium }}>{settings.mode === 'mic' ? '휴대폰 마이크' : '화면 탭'}</T>
           </View>
         </View>
 
@@ -89,6 +95,7 @@ const s = StyleSheet.create({
   pill: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 40, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { paddingVertical: 6, paddingHorizontal: 11, borderRadius: 999, borderWidth: 1 },
+  tierChip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingLeft: 7 },
   prog: { height: 6, borderRadius: 6, overflow: 'hidden' },
   next: { borderRadius: 24, padding: 20, gap: 14 },
   preview: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },

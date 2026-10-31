@@ -11,6 +11,8 @@ import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 
 import { useBeat } from '@/constants/beat-theme';
+import { LeagueProvider } from '@/lib/league-context';
+import { MicProvider } from '@/lib/mic';
 import { StoreProvider } from '@/lib/store';
 
 SplashScreen.preventAutoHideAsync();
@@ -31,11 +33,16 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={theme}>
       <StoreProvider>
+        <LeagueProvider>
+        <MicProvider>
         <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg } }}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="lesson/[id]" />
+          <Stack.Screen name="settings" />
         </Stack>
+        </MicProvider>
+        </LeagueProvider>
       </StoreProvider>
     </ThemeProvider>
   );
